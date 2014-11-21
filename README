@@ -1,0 +1,12 @@
+Name: Corbin Schwalm 
+CSL-ID: schwalm
+Name: Zach York
+CSL-ID: zyork
+(Leave the second name and ID blank if working alone)
+
+Linux-Implementation Details:
+
+We modified a single threaded webserver to handle multiple connects at the same time. We used condition variables to handle the producer/consumer problem.
+
+XV6-Implementation Details:
+
