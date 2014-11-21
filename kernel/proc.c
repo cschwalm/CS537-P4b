@@ -168,7 +168,7 @@ clone(void* stack)
 {
   int i, tid;
   struct proc *np;
-	uint nbp, nsp;
+	uint nbp, nsp, spbegin;
 
   // Allocate process.
   if((np = allocproc()) == 0)
@@ -177,29 +177,29 @@ clone(void* stack)
   // Assign new threads pgdir to be proc->pgdir
   np->pgdir = proc->pgdir;
 
-	/*
-  if((np->pgdir = copyuvm(proc->pgdir, proc->sz)) == 0){
-    kfree(np->kstack);
-    np->kstack = 0;
-    np->state = UNUSED;
-    return -1;
-  }
-	*/
-
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
 	
 	//Calculate bp and stack pointer for calculating bp and sp
-	nbp = np->tf->ebp & 0x0FFF;
+	//cprintf("proc->tf->ebp = %d\n", proc->tf->ebp);
+	//cprintf("proc->tf->esp = %d\n", proc->tf->esp);
+	nbp = proc->tf->ebp & 0x0FFF;
 	nbp = nbp | (uint)stack;
 	
-	nsp = np->tf->esp & 0x0FFF;
+	nsp = proc->tf->esp & 0x0FFF;
 	nsp = nsp | (uint)stack;
 
 	//Change stack pointer and base pointer
 	np->tf->ebp = nbp;
 	np->tf->esp = nsp;
+
+	//cprintf("np->tf->ebp = %d\n", np->tf->ebp);
+	//cprintf("np->tf->esp = %d\n", np->tf->esp);
+
+	//Copy parent's stack into new thread's stack location
+	spbegin = proc->tf->esp & 0xF000;
+	memmove(stack, (void*)spbegin, 0x1000);
 
   // Clear %eax so that clone returns 0 in the child.
   np->tf->eax = 0;

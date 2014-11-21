@@ -15,6 +15,7 @@ USER_PROGS := \
 	stressfs\
 	tester\
 	threads\
+  clone\
 	usertests\
 	wc\
 	zombie
