@@ -10,18 +10,18 @@ int main(int argc, char *argv[]) {
   // int tid = fork();
   int tid = clone(stack);
 	
-	printf(1, "user tid: %d\n", tid);
   if (tid < 0) {
     printf(2, "error!\n");
   } else if (tid == 0) {
     // child
+    printf(1, "child addr: %p\n", &x);
     for(;;) {
       x++;
       sleep(100);
     }
   } else {
     // parent
-    printf(1, "Got inside parent");
+    printf(1, "parent addr: %p\n", &x);
     for(;;) {
       printf(1, "x = %d\n", x);
       sleep(100);

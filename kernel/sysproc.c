@@ -93,10 +93,12 @@ int
 sys_clone(void)
 {
 	char * stack;
+	int addr;
 	
 	if(argptr(0, &stack, sizeof(char *)) < 0)
 		return -1;
 
-	clone((void *)stack);
-	return 0;
+	addr = clone((void*)stack);
+	cprintf("kernel pid: %d\n", addr);
+	return addr;
 }

@@ -196,14 +196,12 @@ clone(void* stack)
 	
 	nsp = np->tf->esp & 0x0FFF;
 	nsp = nsp | (uint)stack;
-	cprintf("bp: %x, sp: %x\n", np->tf->ebp, np->tf->esp);
-	cprintf("nbp: %x, nsp: %x\n", nbp, nsp);	
 
 	//Change stack pointer and base pointer
 	np->tf->ebp = nbp;
 	np->tf->esp = nsp;
 
-  // Clear %eax so that fork returns 0 in the child.
+  // Clear %eax so that clone returns 0 in the child.
   np->tf->eax = 0;
 
   for(i = 0; i < NOFILE; i++)
@@ -212,9 +210,8 @@ clone(void* stack)
   np->cwd = idup(proc->cwd);
  
   tid = np->pid;
-  np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
-	cprintf("tid: %d\n", tid);
+  np->state = RUNNABLE;
   return tid;
 }
 
