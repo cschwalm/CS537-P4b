@@ -166,23 +166,42 @@ fork(void)
 int
 clone(void* stack)
 {
-  int i, pid;
+  int i, tid;
   struct proc *np;
+	uint nbp, nsp;
 
   // Allocate process.
   if((np = allocproc()) == 0)
     return -1;
 
-  // Copy process state from p.
+  // Assign new threads pgdir to be proc->pgdir
+  np->pgdir = proc->pgdir;
+
+	/*
   if((np->pgdir = copyuvm(proc->pgdir, proc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
+	*/
+
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
+	
+	//Calculate bp and stack pointer for calculating bp and sp
+	nbp = np->tf->ebp & 0x0FFF;
+	nbp = nbp | (uint)stack;
+	
+	nsp = np->tf->esp & 0x0FFF;
+	nsp = nsp | (uint)stack;
+	cprintf("bp: %x, sp: %x\n", np->tf->ebp, np->tf->esp);
+	cprintf("nbp: %x, nsp: %x\n", nbp, nsp);	
+
+	//Change stack pointer and base pointer
+	np->tf->ebp = nbp;
+	np->tf->esp = nsp;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -192,10 +211,11 @@ clone(void* stack)
       np->ofile[i] = filedup(proc->ofile[i]);
   np->cwd = idup(proc->cwd);
  
-  pid = np->pid;
+  tid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
-  return pid;
+	cprintf("tid: %d\n", tid);
+  return tid;
 }
 
 // Exit the current process.  Does not return.

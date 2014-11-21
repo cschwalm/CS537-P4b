@@ -88,3 +88,15 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_clone(void)
+{
+	char * stack;
+	
+	if(argptr(0, &stack, sizeof(char *)) < 0)
+		return -1;
+
+	clone((void *)stack);
+	return 0;
+}

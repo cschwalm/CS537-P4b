@@ -83,6 +83,7 @@ argstr(int n, char **pp)
 // array of function pointers to handlers for all the syscalls
 static int (*syscalls[])(void) = {
 [SYS_chdir]   sys_chdir,
+[SYS_clone]   sys_clone,
 [SYS_close]   sys_close,
 [SYS_dup]     sys_dup,
 [SYS_exec]    sys_exec,
