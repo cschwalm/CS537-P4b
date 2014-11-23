@@ -83,7 +83,6 @@ argstr(int n, char **pp)
 // array of function pointers to handlers for all the syscalls
 static int (*syscalls[])(void) = {
 [SYS_chdir]   sys_chdir,
-[SYS_clone]   sys_clone,
 [SYS_close]   sys_close,
 [SYS_dup]     sys_dup,
 [SYS_exec]    sys_exec,
@@ -104,6 +103,10 @@ static int (*syscalls[])(void) = {
 [SYS_wait]    sys_wait,
 [SYS_write]   sys_write,
 [SYS_uptime]  sys_uptime,
+[SYS_clone]   sys_clone,
+[SYS_lock]    sys_lock,
+[SYS_unlock]  sys_unlock,
+[SYS_join]    sys_join 
 };
 
 // Called on a syscall trap. Checks that the syscall number (passed via eax)

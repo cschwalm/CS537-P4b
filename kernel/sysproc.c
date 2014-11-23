@@ -99,3 +99,31 @@ sys_clone(void)
 
 	return clone((void*)stack);
 }
+
+int
+sys_lock(void)
+{
+	char* l;
+
+	if (argptr(0, &l, sizeof(char*)) < 0)
+		return -1;
+
+	return lock((int*) l);
+}
+
+int
+sys_unlock(void)
+{
+	char* l;
+
+	if (argptr(0, &l, sizeof(char*)) < 0)
+		return -1;
+
+	return unlock((int*) l);
+}
+
+int
+sys_join(void)
+{
+	return join();
+}

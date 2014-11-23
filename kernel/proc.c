@@ -45,6 +45,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->threads = 0;
   release(&ptable.lock);
 
   // Allocate kernel stack if possible.
@@ -108,16 +109,24 @@ growproc(int n)
 {
   uint sz;
   
+  acquire(&ptable.lock);
   sz = proc->sz;
   if(n > 0){
     if((sz = allocuvm(proc->pgdir, sz, sz + n)) == 0)
+	{
+	  release(&ptable.lock);
       return -1;
+	}
   } else if(n < 0){
     if((sz = deallocuvm(proc->pgdir, sz, sz + n)) == 0)
+	{
+	  release(&ptable.lock);
       return -1;
+	}
   }
   proc->sz = sz;
   switchuvm(proc);
+  release(&ptable.lock);
   return 0;
 }
 
@@ -176,11 +185,17 @@ clone(void* stack)
 
   // Assign new threads pgdir to be proc->pgdir
   np->pgdir = proc->pgdir;
-
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
-	
+
+  //Increment the thread counter to indicate who shares page table
+  np->parent->threads++;
+
+  //Inialitize this threads lock? 1 lock per thread?
+  np->lock->name = "Custom Lock";
+  np->lock->locked = 0;
+
 	//Calculate bp and stack pointer for calculating bp and sp
 	//cprintf("proc->tf->ebp = %d\n", proc->tf->ebp);
 	//cprintf("proc->tf->esp = %d\n", proc->tf->esp);
@@ -213,6 +228,71 @@ clone(void* stack)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
   np->state = RUNNABLE;
   return tid;
+}
+
+// Wait for a thread to exit and return its pid.
+// Return -1 on error.
+int
+join(void)
+{
+  struct proc *p;
+  int pid;
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for zombie children.
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != proc)
+        continue;
+      if(p->state == ZOMBIE){
+		
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+	 	proc->threads--;
+        if (proc <= 0){
+		  freevm(p->pgdir);
+		}
+        p->state = UNUSED;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any threads.
+    if(proc->threads <= 0 || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for threads to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
+
+int
+lock(int* l)
+{
+  while (*l == 1)
+  {
+    sleep(l, proc->lock);
+  }
+
+  *l = 1;
+  return 0;
+}
+
+int
+unlock(int* l)
+{
+  *l = 0;
+  wakeup(l);
+  return 0;
 }
 
 // Exit the current process.  Does not return.
@@ -265,6 +345,10 @@ wait(void)
 {
   struct proc *p;
   int havekids, pid;
+
+
+  if (proc->threads > 0) //wait should not handle threads
+    return -1;
 
   acquire(&ptable.lock);
   for(;;){

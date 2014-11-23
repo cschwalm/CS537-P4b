@@ -18,13 +18,15 @@ int main(int argc, char *argv[]) {
     for(;;) {
       x++;
       sleep(100);
+	  exit();
     }
   } else {
     // parent
     printf(1, "parent addr: %p\n", &x);
-    for(;;) {
+    while(x < 1) {
       printf(1, "x = %d\n", x);
       sleep(100);
+      join();
     }
   }
 

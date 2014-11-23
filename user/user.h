@@ -10,7 +10,6 @@ int wait(void);
 int pipe(int*);
 int write(int, void*, int);
 int read(int, void*, int);
-int clone(void*);
 int close(int);
 int kill(int);
 int exec(char*, char**);
@@ -26,6 +25,10 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int clone(void*);
+int lock(int*);
+int unlock(int*);
+int join(void);
 
 // user library functions (ulib.c)
 int stat(char*, struct stat*);
