@@ -75,7 +75,6 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int threads;				   // Simple counter to keep tack of threads
-  struct spinlock *lock;        //Lock used for thread locking? 1 lock per thread?
 };
 
 // Process memory is laid out contiguously, low addresses first:

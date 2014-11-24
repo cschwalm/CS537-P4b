@@ -13,6 +13,8 @@ struct {
 
 static struct proc *initproc;
 
+static struct spinlock slock;
+
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
@@ -22,7 +24,8 @@ static void wakeup1(void *chan);
 void
 pinit(void)
 {
-  initlock(&ptable.lock, "ptable");
+  initlock(&slock, "guard");
+	initlock(&ptable.lock, "ptable");
 }
 
 // Look in the process table for an UNUSED proc.
@@ -192,10 +195,6 @@ clone(void* stack)
   //Increment the thread counter to indicate who shares page table
   np->parent->threads++;
 
-  //Inialitize this threads lock? 1 lock per thread?
-  np->lock->name = "Custom Lock";
-  np->lock->locked = 0;
-
 	//Calculate bp and stack pointer for calculating bp and sp
 	//cprintf("proc->tf->ebp = %d\n", proc->tf->ebp);
 	//cprintf("proc->tf->esp = %d\n", proc->tf->esp);
@@ -278,20 +277,38 @@ join(void)
 int
 lock(int* l)
 {
-  while (*l == 1)
+
+  acquire(&slock);
+
+	if (*l == 0){
+    *l = 1;
+    release(&slock);
+		return 0;
+  }
+
+   while (*l == 1)
   {
-    sleep(l, proc->lock);
+    sleep(l, &slock);
   }
 
   *l = 1;
+  release(&slock);
+
   return 0;
 }
 
 int
 unlock(int* l)
 {
+  acquire(&slock);
+  if (*l == 0){
+    release(&slock);
+    return -1;
+  }
+
   *l = 0;
   wakeup(l);
+  release(&slock);
   return 0;
 }
 
