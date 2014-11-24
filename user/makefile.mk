@@ -14,7 +14,6 @@ USER_PROGS := \
 	sh\
 	stressfs\
 	tester\
-	threads\
   clone\
 	usertests\
 	wc\
@@ -27,7 +26,8 @@ USER_LIBS := \
 	ulib.o\
 	usys.o\
 	printf.o\
-	umalloc.o
+	umalloc.o\
+    threads.o
 
 USER_LIBS := $(addprefix user/, $(USER_LIBS))
 

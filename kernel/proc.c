@@ -111,6 +111,7 @@ int
 growproc(int n)
 {
   uint sz;
+  struct proc *p;
   
   acquire(&ptable.lock);
   sz = proc->sz;
@@ -128,6 +129,13 @@ growproc(int n)
 	}
   }
   proc->sz = sz;
+
+  /* Update the other process' sizes. */
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if (p->pgdir == proc->pgdir){
+	  p->sz = sz;
+    }
+  }
   switchuvm(proc);
   release(&ptable.lock);
   return 0;
@@ -236,6 +244,10 @@ join(void)
 {
   struct proc *p;
   int pid;
+
+  /* Join should not handle child processes. */
+  if (proc->threads <= 0)
+    return -1;
 
   acquire(&ptable.lock);
   for(;;){

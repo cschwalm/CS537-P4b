@@ -2,33 +2,31 @@
 #include "stat.h"
 #include "user.h"
 
-int stack[4096] __attribute__ ((aligned (4096)));
-int x = 0;
+#define PGSIZE 4096
 
-int main(int argc, char *argv[]) {
-  printf(1, "Stack is at %p\n", stack);
-  // int tid = fork();
-  int tid = clone(stack);
-	
-  if (tid < 0) {
-    printf(2, "error!\n");
-  } else if (tid == 0) {
-    // child
-    printf(1, "child addr: %p\n", &x);
-    for(;;) {
-      x++;
-      sleep(100);
-	  exit();
-    }
-  } else {
-    // parent
-    printf(1, "parent addr: %p\n", &x);
-    while(x < 1) {
-      printf(1, "x = %d\n", x);
-      sleep(100);
-      join();
-    }
+int
+thread_create(void (*fn) (void *), void *arg)
+{
+  void* stack = malloc(PGSIZE * 2);
+  
+  if((uint)stack % PGSIZE)
+    stack = stack + (4096 - (uint)stack % PGSIZE);
+
+  int threadId = clone(stack);
+
+  if (threadId == -1)
+    return -1;
+
+  if (threadId == 0) //Child Code
+  {
+    fn(arg);
+	free(stack);
+    exit();
+  }
+  else //Parent Code
+  {
+    return threadId;
   }
 
-  exit();
+  return -1;
 }

@@ -10,3 +10,5 @@ We modified a single threaded webserver to handle multiple connects at the same 
 
 XV6-Implementation Details:
 
+We modified the XV6 kernel to handle multi-threading. System calls were created to create a thread and wait for it to join. Additionally, the concept of locking was implemented to complete our new threading features.
+The user library was extended to make it easier to create threads. The kernel had to be modified to handle shared page tables and the possibility of one processes updating the page table entry for every thread.
